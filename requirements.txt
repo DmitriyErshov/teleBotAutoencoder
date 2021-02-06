@@ -1,10 +1,6 @@
 pyTelegramBotAPI==3.7.5
 imageio==2.9.0
 joblib==0.17.0
-kiwisolver==1.2.0
-mkl-fft==1.2.0
-mkl-random==1.1.1
-mkl-service==2.3.0
 networkx==2.5
 numpy==1.19.2
 olefile==0.46
