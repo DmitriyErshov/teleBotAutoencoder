@@ -165,154 +165,154 @@ def callback_worker(call):
         bot.send_message(call.message.chat.id, msg)
 
 
-import os
-import pandas as pd
-
-def fetch_dataset(attrs_name="lfw_attributes.txt",
-                  images_name="lfw-deepfunneled",
-                  dx=80, dy=80,
-                  dimx=45, dimy=45
-                  ):
-
-
-    # read attrs
-    df_attrs = pd.read_csv("lfw_attributes.txt", sep='\t',
-                           skiprows=1, )
-    df_attrs = pd.DataFrame(df_attrs.iloc[:, :-1].values, columns=df_attrs.columns[1:])
-
-    # read photos
-    photo_ids = []
-    for dirpath, dirnames, filenames in os.walk(images_name):
-        for fname in filenames:
-            if fname.endswith(".jpg"):
-                fpath = os.path.join(dirpath, fname)
-                photo_id = fname[:-4].replace('_', ' ').split()
-                person_id = ' '.join(photo_id[:-1])
-                photo_number = int(photo_id[-1])
-                photo_ids.append({'person': person_id, 'imagenum': photo_number, 'photo_path': fpath})
-
-    photo_ids = pd.DataFrame(photo_ids)
-    # print(photo_ids)
-    # mass-merge
-    # (photos now have same order as attributes)
-    df = pd.merge(df_attrs, photo_ids, on=('person', 'imagenum'))
-
-    assert len(df) == len(df_attrs), "lost some data when merging dataframes"
-
-    # print(df.shape)
-    # image preprocessing
-    all_photos = df['photo_path'].apply(skimage.io.imread) \
-        .apply(lambda img: img[dy:-dy, dx:-dx]) \
-        .apply(lambda img: resize(img, [dimx, dimy]))
-
-    all_photos = np.stack(all_photos.values)  # .astype('uint8')
-    # all_attrs = df.drop(["photo_path","person","imagenum"],axis=1)
-
-    return all_photos, df
-
-
-data, attrs = fetch_dataset()
-
-@bot.message_handler(content_types=['photo'])
-def photo(message):
-    print ('message.photo =', message.photo)
-    fileID = message.photo[-1].file_id
-    print ('fileID =', fileID)
-    file_info = bot.get_file(fileID)
-    print ('file.file_path =', file_info.file_path)
-    downloaded_file = bot.download_file(file_info.file_path)
-
-    with open("image.jpg", 'wb') as new_file:
-        new_file.write(downloaded_file)
-
-    # ресайзим изображение
-    dx = dy = 80
-    dimx = dimy = 45
-    img = skimage.io.imread("image.jpg")
-    crop = lambda img: img[dy:-dy, dx:-dx]
-    res = lambda img: resize(img, [dimx, dimy])
-    img = res(crop(img))
-    # img = resize(img, (45, 45))
-    imsave("image.jpg", img)
-
-
-    transform = transforms.Compose([
-        transforms.ToTensor(),
-        # transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225] )
-    ])
-    img = img.astype(np.float32)
-    img = transform(img)
-
-    class AE(nn.Module):
-        def __init__(self, input_shape):
-            super().__init__()
-
-            # Encoder
-            self.conv1 = nn.Conv2d(3, 26, 3, padding=1)
-            self.conv2 = nn.Conv2d(26, 16, 3, padding=1)
-            self.pool = nn.MaxPool2d(2, 2)
-            self.conv3 = nn.Conv2d(16, 4, 3, padding=1)
-
-            # Decoder
-            self.t_conv1 = nn.ConvTranspose2d(4, 16, 2, stride=2)
-            self.t_conv2 = nn.ConvTranspose2d(16, 26, 2, stride=2)
-            self.t_conv3 = nn.ConvTranspose2d(26, 3, 2, stride=1)
-
-        def encode(self, x):
-            x = F.relu(self.conv1(x))
-            # print(x.shape)
-            x = self.pool(x)
-            # print(x.shape)
-            x = F.relu(self.conv2(x))
-            # print(x.shape)
-            x = self.pool(x)
-            # print(x.shape)
-            x = F.relu(self.conv3(x))
-            # print(x.shape)
-            return x
-
-        def decode(self, x):
-            x = F.relu(self.t_conv1(x))
-            x = F.sigmoid(self.t_conv2(x))
-            x = F.sigmoid(self.t_conv3(x))
-            return x
-
-        def forward(self, x):
-            code = self.encode(x)
-            return self.decode(code)
-
-    model = AE(input_shape=6075)
-    model.load_state_dict(torch.load("autoencodermodel.pth"))
-
-    with torch.no_grad():
-        # x = x.view(-1, 6075).to(device)
-        img = img.view(1, 3, 45, 45)
-        witcher_code = model.encode(img)
-        witcher_code = witcher_code  # + mean_smiling_code
-        reconstruction = model.decode(witcher_code)
-
-    out = reconstruction[0].numpy().transpose((1, 2, 0))
-    out = np.clip(out, 0, 1)
-
-    # imsave("image.jpg", out)
-
-    # # код для отправки фото клиенту
-    # img = open("image.jpg", 'rb')
-
-
-    # подбор похожих фото
-    knn = NearestNeighbors(n_neighbors=4, radius=3.0, algorithm='kd_tree', metric='euclidean')
-    knn = joblib.load('knn.pth')
-
-    n_neighbors = 5
-    (distances,), (idx,) = knn.kneighbors(witcher_code.reshape(1, -1).detach().numpy(), n_neighbors=n_neighbors)
-
-    bot.send_message(message.from_user.id, "Вероятнее всего на фото " + attrs['person'][idx[0]])
-    for i in range(n_neighbors):
-        out = data[idx[i]]
-        imsave("image.jpg", out)
-        img = open("image.jpg", 'rb')
-        bot.send_photo(message.from_user.id, img)
+# import os
+# import pandas as pd
+#
+# def fetch_dataset(attrs_name="lfw_attributes.txt",
+#                   images_name="lfw-deepfunneled",
+#                   dx=80, dy=80,
+#                   dimx=45, dimy=45
+#                   ):
+#
+#
+#     # read attrs
+#     df_attrs = pd.read_csv("lfw_attributes.txt", sep='\t',
+#                            skiprows=1, )
+#     df_attrs = pd.DataFrame(df_attrs.iloc[:, :-1].values, columns=df_attrs.columns[1:])
+#
+#     # read photos
+#     photo_ids = []
+#     for dirpath, dirnames, filenames in os.walk(images_name):
+#         for fname in filenames:
+#             if fname.endswith(".jpg"):
+#                 fpath = os.path.join(dirpath, fname)
+#                 photo_id = fname[:-4].replace('_', ' ').split()
+#                 person_id = ' '.join(photo_id[:-1])
+#                 photo_number = int(photo_id[-1])
+#                 photo_ids.append({'person': person_id, 'imagenum': photo_number, 'photo_path': fpath})
+#
+#     photo_ids = pd.DataFrame(photo_ids)
+#     # print(photo_ids)
+#     # mass-merge
+#     # (photos now have same order as attributes)
+#     df = pd.merge(df_attrs, photo_ids, on=('person', 'imagenum'))
+#
+#     assert len(df) == len(df_attrs), "lost some data when merging dataframes"
+#
+#     # print(df.shape)
+#     # image preprocessing
+#     all_photos = df['photo_path'].apply(skimage.io.imread) \
+#         .apply(lambda img: img[dy:-dy, dx:-dx]) \
+#         .apply(lambda img: resize(img, [dimx, dimy]))
+#
+#     all_photos = np.stack(all_photos.values)  # .astype('uint8')
+#     # all_attrs = df.drop(["photo_path","person","imagenum"],axis=1)
+#
+#     return all_photos, df
+#
+#
+# data, attrs = fetch_dataset()
+#
+# @bot.message_handler(content_types=['photo'])
+# def photo(message):
+#     print ('message.photo =', message.photo)
+#     fileID = message.photo[-1].file_id
+#     print ('fileID =', fileID)
+#     file_info = bot.get_file(fileID)
+#     print ('file.file_path =', file_info.file_path)
+#     downloaded_file = bot.download_file(file_info.file_path)
+#
+#     with open("image.jpg", 'wb') as new_file:
+#         new_file.write(downloaded_file)
+#
+#     # ресайзим изображение
+#     dx = dy = 80
+#     dimx = dimy = 45
+#     img = skimage.io.imread("image.jpg")
+#     crop = lambda img: img[dy:-dy, dx:-dx]
+#     res = lambda img: resize(img, [dimx, dimy])
+#     img = res(crop(img))
+#     # img = resize(img, (45, 45))
+#     imsave("image.jpg", img)
+#
+#
+#     transform = transforms.Compose([
+#         transforms.ToTensor(),
+#         # transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225] )
+#     ])
+#     img = img.astype(np.float32)
+#     img = transform(img)
+#
+#     class AE(nn.Module):
+#         def __init__(self, input_shape):
+#             super().__init__()
+#
+#             # Encoder
+#             self.conv1 = nn.Conv2d(3, 26, 3, padding=1)
+#             self.conv2 = nn.Conv2d(26, 16, 3, padding=1)
+#             self.pool = nn.MaxPool2d(2, 2)
+#             self.conv3 = nn.Conv2d(16, 4, 3, padding=1)
+#
+#             # Decoder
+#             self.t_conv1 = nn.ConvTranspose2d(4, 16, 2, stride=2)
+#             self.t_conv2 = nn.ConvTranspose2d(16, 26, 2, stride=2)
+#             self.t_conv3 = nn.ConvTranspose2d(26, 3, 2, stride=1)
+#
+#         def encode(self, x):
+#             x = F.relu(self.conv1(x))
+#             # print(x.shape)
+#             x = self.pool(x)
+#             # print(x.shape)
+#             x = F.relu(self.conv2(x))
+#             # print(x.shape)
+#             x = self.pool(x)
+#             # print(x.shape)
+#             x = F.relu(self.conv3(x))
+#             # print(x.shape)
+#             return x
+#
+#         def decode(self, x):
+#             x = F.relu(self.t_conv1(x))
+#             x = F.sigmoid(self.t_conv2(x))
+#             x = F.sigmoid(self.t_conv3(x))
+#             return x
+#
+#         def forward(self, x):
+#             code = self.encode(x)
+#             return self.decode(code)
+#
+#     model = AE(input_shape=6075)
+#     model.load_state_dict(torch.load("autoencodermodel.pth"))
+#
+#     with torch.no_grad():
+#         # x = x.view(-1, 6075).to(device)
+#         img = img.view(1, 3, 45, 45)
+#         witcher_code = model.encode(img)
+#         witcher_code = witcher_code  # + mean_smiling_code
+#         reconstruction = model.decode(witcher_code)
+#
+#     out = reconstruction[0].numpy().transpose((1, 2, 0))
+#     out = np.clip(out, 0, 1)
+#
+#     # imsave("image.jpg", out)
+#
+#     # # код для отправки фото клиенту
+#     # img = open("image.jpg", 'rb')
+#
+#
+#     # подбор похожих фото
+#     knn = NearestNeighbors(n_neighbors=4, radius=3.0, algorithm='kd_tree', metric='euclidean')
+#     knn = joblib.load('knn.pth')
+#
+#     n_neighbors = 5
+#     (distances,), (idx,) = knn.kneighbors(witcher_code.reshape(1, -1).detach().numpy(), n_neighbors=n_neighbors)
+#
+#     bot.send_message(message.from_user.id, "Вероятнее всего на фото " + attrs['person'][idx[0]])
+#     for i in range(n_neighbors):
+#         out = data[idx[i]]
+#         imsave("image.jpg", out)
+#         img = open("image.jpg", 'rb')
+#         bot.send_photo(message.from_user.id, img)
 
     # out = reconstruction[0].numpy().transpose((1, 2, 0))
     # out = np.clip(out, 0, 1)
