@@ -210,7 +210,7 @@ def fetch_dataset(attrs_name="lfw_attributes.txt",
     return all_photos, df
 
 
-data, attrs = fetch_dataset()
+# data, attrs = fetch_dataset()
 
 @bot.message_handler(content_types=['photo'])
 def photo(message):
@@ -293,25 +293,25 @@ def photo(message):
     out = reconstruction[0].numpy().transpose((1, 2, 0))
     out = np.clip(out, 0, 1)
 
-    # imsave("image.jpg", out)
+    imsave("image.jpg", out)
 
-    # # код для отправки фото клиенту
-    # img = open("image.jpg", 'rb')
+    # код для отправки фото клиенту
+    img = open("image.jpg", 'rb')
 
 
-    # подбор похожих фото
-    knn = NearestNeighbors(n_neighbors=4, radius=3.0, algorithm='kd_tree', metric='euclidean')
-    knn = joblib.load('knn.pth')
-
-    n_neighbors = 5
-    (distances,), (idx,) = knn.kneighbors(witcher_code.reshape(1, -1).detach().numpy(), n_neighbors=n_neighbors)
-
-    bot.send_message(message.from_user.id, "Вероятнее всего на фото " + attrs['person'][idx[0]])
-    for i in range(n_neighbors):
-        out = data[idx[i]]
-        imsave("image.jpg", out)
-        img = open("image.jpg", 'rb')
-        bot.send_photo(message.from_user.id, img)
+    # # подбор похожих фото
+    # knn = NearestNeighbors(n_neighbors=4, radius=3.0, algorithm='kd_tree', metric='euclidean')
+    # knn = joblib.load('knn.pth')
+    #
+    # n_neighbors = 5
+    # (distances,), (idx,) = knn.kneighbors(witcher_code.reshape(1, -1).detach().numpy(), n_neighbors=n_neighbors)
+    #
+    # bot.send_message(message.from_user.id, "Вероятнее всего на фото " + attrs['person'][idx[0]])
+    # for i in range(n_neighbors):
+    #     out = data[idx[i]]
+    #     imsave("image.jpg", out)
+    #     img = open("image.jpg", 'rb')
+    #     bot.send_photo(message.from_user.id, img)
 
     # out = reconstruction[0].numpy().transpose((1, 2, 0))
     # out = np.clip(out, 0, 1)
@@ -319,6 +319,6 @@ def photo(message):
     # imsave("image.jpg", out)
     #
     # img = open("image.jpg", 'rb')
-    # bot.send_photo(message.from_user.id, img)
+    bot.send_photo(message.from_user.id, img)
 # Запускаем постоянный опрос бота в Телеграме
 bot.polling()
