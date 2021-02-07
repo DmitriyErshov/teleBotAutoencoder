@@ -9,7 +9,6 @@ import random
 
 
 
-import neural_net
 import numpy as np
 
 import torch
