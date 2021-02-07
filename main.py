@@ -322,4 +322,4 @@ def callback_worker(call):
     # img = open("image.jpg", 'rb')
     # bot.send_photo(message.from_user.id, img)
 # Запускаем постоянный опрос бота в Телеграме
-bot.polling(none_stop=True, interval=0)
+bot.polling()
