@@ -224,6 +224,7 @@ def photo(message):
     with open("image.jpg", 'wb') as new_file:
         new_file.write(downloaded_file)
 
+    from skimage import color
     # ресайзим изображение
     dx = dy = 80
     dimx = dimy = 45
@@ -232,7 +233,7 @@ def photo(message):
     res = lambda img: resize(img, [dimx, dimy])
     img = res(crop(img))
     # img = resize(img, (45, 45))
-    imsave("image.jpg", img)
+    imsave("image.jpg",  img)
 
 
     transform = transforms.Compose([
@@ -308,8 +309,8 @@ def photo(message):
     #
     # bot.send_message(message.from_user.id, "Вероятнее всего на фото " + attrs['person'][idx[0]])
     # for i in range(n_neighbors):
-    #     out = data[idx[i]]
-    #     imsave("image.jpg", out)
+    #     imsave("lfw-deepfunneled/" + attrs['person'][idx[0]] + "/" + attrs['person'][idx[0]] //
+    #     + "_0001".jpg", out)
     #     img = open("image.jpg", 'rb')
     #     bot.send_photo(message.from_user.id, img)
 
