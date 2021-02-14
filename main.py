@@ -29,7 +29,7 @@ TOKEN = '1584253686:AAHEA0l_O4BPLD-DUe3oe_-u1NfnKnGccD0'
 bot = telebot.TeleBot(TOKEN)
 server = Flask(__name__)
 
-@server.route('/safe-savannah-20654', methods=['POST'])
+@server.route('/', methods=['POST'])
 def getMessage():
     bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
     return "!", 200
@@ -44,7 +44,7 @@ def webhook():
 
 if __name__ == "__main__":
     server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
-    
+
 # Импортируем типы из модуля, чтобы создавать кнопки
 
 from telebot import types
@@ -97,59 +97,23 @@ def get_text_messages(message):
 
         # По очереди готовим текст и обработчик для каждого знака зодиака
 
-        key_oven = types.InlineKeyboardButton(text='Овен', callback_data='zodiac')
+        key_smile = types.InlineKeyboardButton(text='Приделать улыбку', callback_data='smile')
 
         # И добавляем кнопку на экран
 
-        keyboard.add(key_oven)
+        keyboard.add(key_smile)
 
-        key_telec = types.InlineKeyboardButton(text='Телец', callback_data='zodiac')
+        key_find = types.InlineKeyboardButton(text='Найти совпадения', callback_data='find')
 
-        keyboard.add(key_telec)
+        keyboard.add(key_find)
 
-        key_bliznecy = types.InlineKeyboardButton(text='Близнецы', callback_data='zodiac')
-
-        keyboard.add(key_bliznecy)
-
-        key_rak = types.InlineKeyboardButton(text='Рак', callback_data='zodiac')
-
-        keyboard.add(key_rak)
-
-        key_lev = types.InlineKeyboardButton(text='Лев', callback_data='zodiac')
-
-        keyboard.add(key_lev)
-
-        key_deva = types.InlineKeyboardButton(text='Дева', callback_data='zodiac')
-
-        keyboard.add(key_deva)
-
-        key_vesy = types.InlineKeyboardButton(text='Весы', callback_data='zodiac')
-
-        keyboard.add(key_vesy)
-
-        key_scorpion = types.InlineKeyboardButton(text='Скорпион', callback_data='zodiac')
-
-        keyboard.add(key_scorpion)
-
-        key_strelec = types.InlineKeyboardButton(text='Стрелец', callback_data='zodiac')
-
-        keyboard.add(key_strelec)
-
-        key_kozerog = types.InlineKeyboardButton(text='Козерог', callback_data='zodiac')
-
-        keyboard.add(key_kozerog)
-
-        key_vodoley = types.InlineKeyboardButton(text='Водолей', callback_data='zodiac')
-
-        keyboard.add(key_vodoley)
-
-        key_ryby = types.InlineKeyboardButton(text='Рыбы', callback_data='zodiac')
-
-        keyboard.add(key_ryby)
+        # key_bliznecy = types.InlineKeyboardButton(text='Близнецы', callback_data='zodiac')
+        #
+        # keyboard.add(key_bliznecy)
 
         # Показываем все кнопки сразу и пишем сообщение о выборе
 
-        bot.send_message(message.from_user.id, text='Выбери свой знак зодиака', reply_markup=keyboard)
+        bot.send_message(message.from_user.id, text='Выберите что вам интересно сделать с этой фотографией', reply_markup=keyboard)
 
     elif message.text == "/help":
 
