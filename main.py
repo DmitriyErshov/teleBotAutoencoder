@@ -25,7 +25,7 @@ def getMessage():
     return "!", 200
 
 
-@server.route("/")
+@server.route("https://t.me/labaFromVAI_bot/")
 def webhook():
     bot.remove_webhook()
     bot.set_webhook(url='https://safe-savannah-20654.herokuapp.com/')
