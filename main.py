@@ -19,7 +19,7 @@ def echo_message(message):
     bot.reply_to(message, message.text)
 
 
-@server.route('/' + TOKEN, methods=['POST'])
+@server.route('/', methods=['POST'])
 def getMessage():
     bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
     return "!", 200
@@ -28,7 +28,7 @@ def getMessage():
 @server.route("/")
 def webhook():
     bot.remove_webhook()
-    bot.set_webhook(url='https://safe-savannah-20654.herokuapp.com/' + TOKEN)
+    bot.set_webhook(url='https://safe-savannah-20654.herokuapp.com/')
     return "!", 200
 
 
