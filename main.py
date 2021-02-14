@@ -1,13 +1,4 @@
-# This is a sample Python script.
-
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-
-
-# Подключаем модуль случайных чисел
-import random
-
-
+import os
 
 import numpy as np
 
@@ -22,7 +13,7 @@ from skimage.transform import resize
 
 from torchvision import transforms
 import torch.nn.functional as F
-
+import random
 import sklearn
 from sklearn.neighbors import NearestNeighbors
 import joblib
@@ -31,10 +22,12 @@ import joblib
 from symbol import decorator
 
 import telebot
-
+from flask import Flask, request
 # Указываем токен
 
-bot = telebot.TeleBot('1584253686:AAHEA0l_O4BPLD-DUe3oe_-u1NfnKnGccD0')
+TOKEN = '1584253686:AAHEA0l_O4BPLD-DUe3oe_-u1NfnKnGccD0'
+bot = telebot.TeleBot(TOKEN)
+server = Flask(__name__)
 
 # Импортируем типы из модуля, чтобы создавать кнопки
 
@@ -68,15 +61,19 @@ third = ["Злые языки могут говорить вам обратно�
 
 # Метод, который получает сообщения и обрабатывает их
 
+@bot.message_handler(commands=['start'])
+def start(message):
+    bot.reply_to(message, 'Здравствуйте, ' + message.from_user.first_name)
+
 @bot.message_handler(content_types=['text'])
 def get_text_messages(message):
     # Если написали «Привет»
 
-    if message.text == "Привет ёптыть":
+    if message.text == "Привет":
 
         # Пишем приветствие
 
-        bot.send_message(message.from_user.id, "Привет, сейчас я расскажу тебе гороскоп на сегодня.")
+        bot.send_message(message.from_user.id, "Привет, пришли мне фотографию, чтобы пририсовать хмурому человеку на ней улыбку.")
 
         # Готовим кнопки
 
@@ -140,11 +137,11 @@ def get_text_messages(message):
 
     elif message.text == "/help":
 
-        bot.send_message(message.from_user.id, "Напиши привет ёптыть")
+        bot.send_message(message.from_user.id, "Напиши привет")
 
     else:
 
-        bot.send_message(message.from_user.id, "Я тебя не понимаю. Напиши /help ёпта.")
+        bot.send_message(message.from_user.id, "Я тебя не понимаю. Напиши /help.")
 
 
 # Обработчик нажатий на кнопки
@@ -164,7 +161,6 @@ def callback_worker(call):
         bot.send_message(call.message.chat.id, msg)
 
 
-import os
 import pandas as pd
 
 
@@ -241,7 +237,7 @@ def photo(message):
 
     out = reconstruction[0].numpy().transpose((1, 2, 0))
     out = np.clip(out, 0, 1)
-
+    out = resize(out, (100, 100))
     imsave("image.jpg", out)
 
     # код для отправки фото клиенту
@@ -250,7 +246,7 @@ def photo(message):
 
     # # # подбор похожих фото
     # knn = NearestNeighbors(n_neighbors=4, radius=3.0, algorithm='kd_tree', metric='euclidean')
-    # knn = joblib.load('knn.pth')
+    # knn = joblib.load('knn2.pth')
     #
     # n_neighbors = 5
     # (distances,), (idx,) = knn.kneighbors(witcher_code.reshape(1, -1).detach().numpy(), n_neighbors=n_neighbors)
@@ -258,7 +254,7 @@ def photo(message):
     # df_attrs = pd.read_csv("lfw_attributes.txt", sep='\t', skiprows=1, )
     # bot.send_message(message.from_user.id, "Вероятнее всего на фото " + df_attrs['person'][idx[0]])
     # for i in range(n_neighbors):
-    #     imsave("lfw-deepfunneled/" + attrs['person'][idx[0]] + "/" + attrs['person'][idx[0]] //
+    #     imsave("lfw-deepfunneled/" + df_attrs['person'][idx[0]] + "/" + df_attrs['person'][idx[0]] //
     #     + "_0001".jpg", out)
     #     img = open("image.jpg", 'rb')
     #     bot.send_photo(message.from_user.id, img)
@@ -267,8 +263,24 @@ def photo(message):
     # out = np.clip(out, 0, 1)
     # out = data[666]
     # imsave("image.jpg", out)
-    #
+
     # img = open("image.jpg", 'rb')
     bot.send_photo(message.from_user.id, img)
 # Запускаем постоянный опрос бота в Телеграме
-bot.polling()
+# bot.polling()
+
+@server.route('/' + TOKEN, methods=['POST'])
+def getMessage():
+    bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
+    return "!", 200
+
+
+@server.route("/")
+def webhook():
+    bot.remove_webhook()
+    bot.set_webhook(url='https://dashboard.heroku.com/apps/safe-savannah-20654/' + TOKEN)
+    return "!", 200
+
+
+if __name__ == "__main__":
+    server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
