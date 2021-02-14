@@ -29,7 +29,7 @@ TOKEN = '1584253686:AAHEA0l_O4BPLD-DUe3oe_-u1NfnKnGccD0'
 bot = telebot.TeleBot(TOKEN)
 server = Flask(__name__)
 
-@server.route('/', methods=['POST'])
+@server.route('/' + TOKEN, methods=['POST'])
 def getMessage():
     bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
     return "!", 200
