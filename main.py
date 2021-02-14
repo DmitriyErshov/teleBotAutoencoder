@@ -29,6 +29,22 @@ TOKEN = '1584253686:AAHEA0l_O4BPLD-DUe3oe_-u1NfnKnGccD0'
 bot = telebot.TeleBot(TOKEN)
 server = Flask(__name__)
 
+@server.route('/safe-savannah-20654', methods=['POST'])
+def getMessage():
+    bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
+    return "!", 200
+
+
+@server.route("/")
+def webhook():
+    bot.remove_webhook()
+    bot.set_webhook(url='https://safe-savannah-20654.herokuapp.com/')
+    return "!", 200
+
+
+if __name__ == "__main__":
+    server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
+    
 # Импортируем типы из модуля, чтобы создавать кнопки
 
 from telebot import types
@@ -269,18 +285,3 @@ def photo(message):
 # Запускаем постоянный опрос бота в Телеграме
 # bot.polling()
 
-@server.route('/safe-savannah-20654', methods=['POST'])
-def getMessage():
-    bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
-    return "!", 200
-
-
-@server.route("/")
-def webhook():
-    bot.remove_webhook()
-    bot.set_webhook(url='https://dashboard.heroku.com/apps/safe-savannah-20654')
-    return "!", 200
-
-
-if __name__ == "__main__":
-    server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
