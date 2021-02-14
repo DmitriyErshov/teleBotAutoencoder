@@ -199,37 +199,27 @@ def photo(message):
     img = img.astype(np.float32)
     img = transform(img)
 
+    import torch.nn.functional as F
+
     class AE(nn.Module):
         def __init__(self, input_shape):
             super().__init__()
 
             # Encoder
             self.conv1 = nn.Conv2d(3, 26, 3, padding=1)
-            self.conv2 = nn.Conv2d(26, 16, 3, padding=1)
+            self.bn1 = nn.BatchNorm2d(26)
             self.pool = nn.MaxPool2d(2, 2)
-            self.conv3 = nn.Conv2d(16, 4, 3, padding=1)
 
             # Decoder
-            self.t_conv1 = nn.ConvTranspose2d(4, 16, 2, stride=2)
-            self.t_conv2 = nn.ConvTranspose2d(16, 26, 2, stride=2)
-            self.t_conv3 = nn.ConvTranspose2d(26, 3, 2, stride=1)
+            self.t_conv3 = nn.ConvTranspose2d(26, 3, 3, stride=2)
 
         def encode(self, x):
             x = F.relu(self.conv1(x))
-            # print(x.shape)
             x = self.pool(x)
-            # print(x.shape)
-            x = F.relu(self.conv2(x))
-            # print(x.shape)
-            x = self.pool(x)
-            # print(x.shape)
-            x = F.relu(self.conv3(x))
-            # print(x.shape)
+            self.bn1
             return x
 
         def decode(self, x):
-            x = F.relu(self.t_conv1(x))
-            x = F.sigmoid(self.t_conv2(x))
             x = F.sigmoid(self.t_conv3(x))
             return x
 
@@ -238,13 +228,15 @@ def photo(message):
             return self.decode(code)
 
     model = AE(input_shape=6075)
-    model.load_state_dict(torch.load("autoencodermodel.pth"))
+    model.load_state_dict(torch.load("autoencoderConv1layer.pth"))
+
+    mean_smiling_code = torch.load("mean_smiling_code.pt")
 
     with torch.no_grad():
         # x = x.view(-1, 6075).to(device)
         img = img.view(1, 3, 45, 45)
         witcher_code = model.encode(img)
-        witcher_code = witcher_code  # + mean_smiling_code
+        witcher_code = witcher_code  + mean_smiling_code
         reconstruction = model.decode(witcher_code)
 
     out = reconstruction[0].numpy().transpose((1, 2, 0))
@@ -256,15 +248,15 @@ def photo(message):
     img = open("image.jpg", 'rb')
 
 
-    # # подбор похожих фото
-    knn = NearestNeighbors(n_neighbors=4, radius=3.0, algorithm='kd_tree', metric='euclidean')
-    knn = joblib.load('knn.pth')
-
-    n_neighbors = 5
-    (distances,), (idx,) = knn.kneighbors(witcher_code.reshape(1, -1).detach().numpy(), n_neighbors=n_neighbors)
-
-    df_attrs = pd.read_csv("lfw_attributes.txt", sep='\t', skiprows=1, )
-    bot.send_message(message.from_user.id, "Вероятнее всего на фото " + df_attrs['person'][idx[0]])
+    # # # подбор похожих фото
+    # knn = NearestNeighbors(n_neighbors=4, radius=3.0, algorithm='kd_tree', metric='euclidean')
+    # knn = joblib.load('knn.pth')
+    #
+    # n_neighbors = 5
+    # (distances,), (idx,) = knn.kneighbors(witcher_code.reshape(1, -1).detach().numpy(), n_neighbors=n_neighbors)
+    #
+    # df_attrs = pd.read_csv("lfw_attributes.txt", sep='\t', skiprows=1, )
+    # bot.send_message(message.from_user.id, "Вероятнее всего на фото " + df_attrs['person'][idx[0]])
     # for i in range(n_neighbors):
     #     imsave("lfw-deepfunneled/" + attrs['person'][idx[0]] + "/" + attrs['person'][idx[0]] //
     #     + "_0001".jpg", out)
