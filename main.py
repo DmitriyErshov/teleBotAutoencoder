@@ -19,13 +19,13 @@ def echo_message(message):
     bot.reply_to(message, message.text)
 
 
-@server.route('/', methods=['POST'])
+@server.route('/bot' + TOKEN, methods=['POST'])
 def getMessage():
     bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
     return "!", 200
 
 
-@server.route("https://t.me/labaFromVAI_bot/")
+@server.route("/")
 def webhook():
     bot.remove_webhook()
     bot.set_webhook(url='https://safe-savannah-20654.herokuapp.com/')
